@@ -4,57 +4,81 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float speed = 5.0f; // Velocidad de movimiento lateral
-    public float rotationSmoothness = 0.1f; // Suavidad del giro
-    public float jumpForce = 8.0f; // Fuerza de salto
-    public float gravity = 20.0f; // Gravedad aplicada al salto
-    public float groundRaycastDistance = 0.2f; // Distancia de raycast para detectar el suelo
-    private GroundSensor gs;
+    private CharacterController _controller;
+    //private Animator _anim;
+    private Transform _camera;
 
-    private CharacterController characterController;
-    private Vector3 moveDirection;
-    private float ySpeed;
+    //Movimiento
+    private float _horizontal;
+    private float _vertical;
+    [SerializeField] private float _vel = 5;
+    [SerializeField] private float turnSmoothTime = 0.1f;
+    private float turnSmoothVelocity;
 
-        //Salto
+    //Salto
     [SerializeField] private float _alturaSalto = 1;
-    private float _gravedad = -9.81f;
+    private float _gravedad = -20f;
     private Vector3 _jugadorGravedad;
     [SerializeField] private Transform _posicionSensor;
     [SerializeField] private float _radioSensor = 0.2f;
     [SerializeField] private LayerMask _layerSuelo;
     public bool _isGrounded;
 
-    void Start()
+    void Awake()
     {
-        characterController = GetComponent<CharacterController>();
-        gs = GameObject.Find("GroundSensor").GetComponent<GroundSensor>();
+        _controller = GetComponent<CharacterController>();
+        //_anim = GetComponentInChildren<Animator>();
+        _camera = Camera.main.transform;
     }
 
     void Update()
     {
-        HandleMovementInput();
+        _horizontal = Input.GetAxisRaw("Horizontal");
+        //_vertical = Input.GetAxisRaw("Vertical");
+        if(Input.GetButton("Fire2"))
+        {
+            ApuntadoMovimiento();
+        }else 
+        {
+            Movimiento();
+        }
         Salto();
+        //_anim.SetBool("isJumping",!_isGrounded);
+    
     }
 
-    void HandleMovementInput()
+    void Movimiento()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        moveDirection = new Vector3(horizontalInput, 0, 0);
-        moveDirection = transform.TransformDirection(moveDirection);
-        moveDirection *= speed;
+        Vector3 _direccion = new Vector3 (_horizontal, 0, 0);
 
-        // Aplicar gravedad
-        if (!characterController.isGrounded)
-        {
-            ySpeed -= gravity * Time.deltaTime;
-        }
-        else
-        {
-            ySpeed = -gravity * 0.5f; // Resetear la velocidad de caída cuando está en el suelo
-        }
+        //_anim.SetFloat("VelX",0);
+        //_anim.SetFloat("VelZ", _direccion.magnitude);
 
-        moveDirection.y = ySpeed;
-        characterController.Move(moveDirection * Time.deltaTime);
+        if(_direccion != Vector3.zero)
+        {
+            float _targetAngle = Mathf.Atan2(_direccion.x, _direccion.z) * Mathf.Rad2Deg + _camera.eulerAngles.y;
+            float _smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0,_smoothAngle,0);
+            Vector3 _moveDirection = Quaternion.Euler(0, _targetAngle, 0) * Vector3.forward;
+            _controller.Move(_moveDirection.normalized * _vel * Time.deltaTime);
+        }
+    }
+
+    void ApuntadoMovimiento()
+    {
+        Vector3 _direccion = new Vector3 (_horizontal, 0, _vertical);
+
+        //_anim.SetFloat("VelX",_horizontal);
+        //_anim.SetFloat("VelZ", _vertical);
+        float _targetAngle = Mathf.Atan2(_direccion.x, _direccion.z) * Mathf.Rad2Deg + _camera.eulerAngles.y;
+        float _smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y,  _camera.eulerAngles.y, ref turnSmoothVelocity, turnSmoothTime);
+        transform.rotation = Quaternion.Euler(0,_smoothAngle,0);
+
+        if(_direccion != Vector3.zero)
+        {
+            Vector3 _moveDirection = Quaternion.Euler(0, _targetAngle, 0) * Vector3.forward;
+            _controller.Move(_moveDirection.normalized * _vel * Time.deltaTime);
+        }
     }
 
     void Salto()
@@ -71,6 +95,7 @@ public class Player : MonoBehaviour
             _jugadorGravedad.y = Mathf.Sqrt(_alturaSalto * -2 * _gravedad);
         }
         _jugadorGravedad.y += _gravedad * Time.deltaTime;
-        characterController.Move(_jugadorGravedad * Time.deltaTime);
+        _controller.Move(_jugadorGravedad * Time.deltaTime);
     }
+    
 }
