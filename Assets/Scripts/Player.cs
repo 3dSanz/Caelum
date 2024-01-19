@@ -17,7 +17,7 @@ public class Player : MonoBehaviour
 
     //Salto
     [SerializeField] private float _alturaSalto = 1;
-    private float _gravedad = -20f;
+    private float _gravedad = -35f;
     private Vector3 _jugadorGravedad;
     [SerializeField] private Transform _posicionSensor;
     [SerializeField] private float _radioSensor = 0.2f;
