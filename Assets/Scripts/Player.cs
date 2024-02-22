@@ -24,6 +24,15 @@ public class Player : MonoBehaviour
     [SerializeField] private LayerMask _layerSuelo;
     public bool _isGrounded;
 
+    //Ataque
+    public float damage = 10f;
+    public LayerMask enemyLayer;
+    public float attackRadius = 1.5f;
+
+    //Dash
+    public float dashDistance = 5f;
+    public float dashDuration = 0.5f;
+
     void Awake()
     {
         _controller = GetComponent<CharacterController>();
@@ -35,15 +44,20 @@ public class Player : MonoBehaviour
     {
         _horizontal = Input.GetAxisRaw("Horizontal");
         //_vertical = Input.GetAxisRaw("Vertical");
-        if(Input.GetButton("Fire2"))
-        {
-            ApuntadoMovimiento();
-        }else 
-        {
-            Movimiento();
-        }
+        Movimiento();
+        
         Salto();
         //_anim.SetBool("isJumping",!_isGrounded);
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            PerformAttack();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            PerformDash();
+        }
     
     }
 
@@ -64,22 +78,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    void ApuntadoMovimiento()
-    {
-        Vector3 _direccion = new Vector3 (_horizontal, 0, _vertical);
-
-        //_anim.SetFloat("VelX",_horizontal);
-        //_anim.SetFloat("VelZ", _vertical);
-        float _targetAngle = Mathf.Atan2(_direccion.x, _direccion.z) * Mathf.Rad2Deg + _camera.eulerAngles.y;
-        float _smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y,  _camera.eulerAngles.y, ref turnSmoothVelocity, turnSmoothTime);
-        transform.rotation = Quaternion.Euler(0,_smoothAngle,0);
-
-        if(_direccion != Vector3.zero)
-        {
-            Vector3 _moveDirection = Quaternion.Euler(0, _targetAngle, 0) * Vector3.forward;
-            _controller.Move(_moveDirection.normalized * _vel * Time.deltaTime);
-        }
-    }
 
     void Salto()
     {
@@ -96,6 +94,44 @@ public class Player : MonoBehaviour
         }
         _jugadorGravedad.y += _gravedad * Time.deltaTime;
         _controller.Move(_jugadorGravedad * Time.deltaTime);
+    }
+
+   void PerformAttack()
+    {
+        //animator.SetTrigger("Attack");
+
+       Collider[] enemies = Physics.OverlapSphere(transform.position, attackRadius, enemyLayer);
+
+        foreach (Collider enemy in enemies)
+        {
+            enemy.GetComponent<Enemy>().TakeDamage(damage);
+        }
+    }
+
+    void PerformDash()
+    {
+        Vector3 finalPosition = transform.position + transform.forward * dashDistance;
+
+        StartCoroutine(Dash(finalPosition, dashDuration));
+    }
+
+    IEnumerator Dash(Vector3 finalPosition, float duration)
+    {
+        float startTime = Time.time;
+        float completionPercentage = 0f;
+
+        while (completionPercentage < 1f)
+        {
+            completionPercentage = (Time.time - startTime) / duration;
+            transform.position = Vector3.Lerp(transform.position, finalPosition, completionPercentage);
+            yield return null;
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRadius);
     }
     
 }
