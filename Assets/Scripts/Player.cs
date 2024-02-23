@@ -30,8 +30,12 @@ public class Player : MonoBehaviour
     public float attackRadius = 1.5f;
 
     //Dash
-    public float dashDistance = 5f;
-    public float dashDuration = 0.5f;
+    public float dashDistance = 5f; // Dash distance
+    public float dashDuration = 0.5f; // Dash duration in seconds
+    public float dashSpeed = 10f; // Dash speed
+
+    private Vector3 dashStartPos;
+    private bool isDashing;
 
     void Awake()
     {
@@ -57,6 +61,11 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Z))
         {
             PerformDash();
+        }
+
+        if (isDashing)
+        {
+            DashMovement();
         }
     
     }
@@ -110,22 +119,31 @@ public class Player : MonoBehaviour
 
     void PerformDash()
     {
-        Vector3 finalPosition = transform.position + transform.forward * dashDistance;
+        if (!isDashing)
+        {
+            // Save the starting position of the dash
+            dashStartPos = transform.position;
 
-        StartCoroutine(Dash(finalPosition, dashDuration));
+            // Set the flag to start dashing
+            isDashing = true;
+        }
     }
 
-    IEnumerator Dash(Vector3 finalPosition, float duration)
+    void DashMovement()
     {
-        float startTime = Time.time;
-        float completionPercentage = 0f;
+        // Calculate the final position of the dash
+        Vector3 finalPosition = dashStartPos + transform.forward * dashDistance;
 
-        while (completionPercentage < 1f)
+        // Move towards the final position using CharacterController
+        _controller.Move(transform.forward * dashSpeed * Time.deltaTime);
+
+        // Check if the dash is completed
+        if (Vector3.Distance(transform.position, dashStartPos) >= dashDistance)
         {
-            completionPercentage = (Time.time - startTime) / duration;
-            transform.position = Vector3.Lerp(transform.position, finalPosition, completionPercentage);
-            yield return null;
+            // Reset the flag and stop dashing
+            isDashing = false;
         }
+
     }
 
     private void OnDrawGizmosSelected()
