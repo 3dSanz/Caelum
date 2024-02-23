@@ -28,11 +28,12 @@ public class Player : MonoBehaviour
     public float damage = 10f;
     public LayerMask enemyLayer;
     public float attackRadius = 1.5f;
+    [SerializeField] private float downwardAttackForce = 15;
 
     //Dash
-    public float dashDistance = 5f; // Dash distance
-    public float dashDuration = 0.5f; // Dash duration in seconds
-    public float dashSpeed = 10f; // Dash speed
+    public float dashDistance = 5f;
+    public float dashDuration = 0.5f;
+    public float dashSpeed = 10f;
 
     private Vector3 dashStartPos;
     private bool isDashing;
@@ -56,6 +57,11 @@ public class Player : MonoBehaviour
         if (Input.GetButtonDown("Fire1"))
         {
             PerformAttack();
+        }
+
+        if (Input.GetButtonDown("Fire1") && Input.GetKeyDown(KeyCode.S))
+        {
+            PerformDownwardAttack();
         }
 
         if (Input.GetKeyDown(KeyCode.Z))
@@ -115,6 +121,20 @@ public class Player : MonoBehaviour
         {
             enemy.GetComponent<Enemy>().TakeDamage(damage);
         }
+        Debug.Log("Atacado");
+    }
+
+    void PerformDownwardAttack()
+    {
+        //animator.SetTrigger("DownwardAttack"); // Activate the downward attack animation
+        Collider[] enemies = Physics.OverlapSphere(transform.position, attackRadius, enemyLayer);
+
+        foreach (Collider enemy in enemies)
+        {
+            enemy.GetComponent<Enemy>().TakeDamage(damage);
+        }
+        _controller.Move(Vector3.up * downwardAttackForce * Time.deltaTime);
+        Debug.Log("Atacado Abajo");
     }
 
     void PerformDash()
