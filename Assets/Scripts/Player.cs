@@ -41,7 +41,7 @@ public class Player : MonoBehaviour
     void Awake()
     {
         _controller = GetComponent<CharacterController>();
-        //_anim = GetComponentInChildren<Animator>();
+        _anim = GetComponentInChildren<Animator>();
         _camera = Camera.main.transform;
     }
 
