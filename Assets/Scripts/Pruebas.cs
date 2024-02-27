@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Pruebas : MonoBehaviour
 {
-    public float speed = 5f;
+   /* public float speed = 5f;
     public float dashSpeed = 10f;
     public float dashDuration = 0.5f;
     public float parryCooldown = 1f;
@@ -88,7 +88,7 @@ public class Pruebas : MonoBehaviour
     EnemyController enemyController = target.GetComponent<EnemyController>();
     if (enemyController != null)
     {
-        enemyController.ApplySpecialMeleeAttack();
+        ApplySpecialMeleeAttack();
     }
 
     Debug.Log("Melee Parry and Special Attack!");
@@ -123,5 +123,5 @@ public class Pruebas : MonoBehaviour
     }
 
     Debug.Log("Ranged Parry and Projectile Reflection!");
-    }
+    }*/
 }
