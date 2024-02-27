@@ -5,7 +5,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     private CharacterController _controller;
-    //private Animator _anim;
+    private Animator _anim;
     private Transform _camera;
 
     //Movimiento
@@ -53,10 +53,14 @@ public class Player : MonoBehaviour
         
         Salto();
         //_anim.SetBool("isJumping",!_isGrounded);
+        _anim.SetBool("isJumping",!_isGrounded);
 
         if (Input.GetButtonDown("Fire1"))
         {
             PerformAttack();
+            _anim.SetBool("isAttacking",true);
+        }else{
+            _anim.SetBool("isAttacking",false);
         }
 
         if (Input.GetButtonDown("Fire1") && Input.GetKeyDown(KeyCode.S))
@@ -67,11 +71,16 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Z))
         {
             PerformDash();
+            
         }
 
         if (isDashing)
         {
             DashMovement();
+            _anim.SetBool("isDash",true);
+            
+        }else{
+            _anim.SetBool("isDash",false);
         }
     
     }
@@ -80,8 +89,8 @@ public class Player : MonoBehaviour
     {
         Vector3 _direccion = new Vector3 (_horizontal, 0, 0);
 
-        //_anim.SetFloat("VelX",0);
-        //_anim.SetFloat("VelZ", _direccion.magnitude);
+        _anim.SetFloat("VelX",0);
+        _anim.SetFloat("VelZ", _direccion.magnitude);
 
         if(_direccion != Vector3.zero)
         {
@@ -106,6 +115,7 @@ public class Player : MonoBehaviour
         if(_isGrounded && Input.GetButtonDown("Jump"))
         {
             _jugadorGravedad.y = Mathf.Sqrt(_alturaSalto * -2 * _gravedad);
+            _anim.SetBool("isJumping",true);
         }
         _jugadorGravedad.y += _gravedad * Time.deltaTime;
         _controller.Move(_jugadorGravedad * Time.deltaTime);
