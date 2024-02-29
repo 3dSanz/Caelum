@@ -29,6 +29,7 @@ public class Player : MonoBehaviour
     public LayerMask enemyLayer;
     public float attackRadius = 1.5f;
     [SerializeField] private float downwardAttackForce = 15;
+    [SerializeField] private Transform _attackForward;
 
     //Dash
     public float dashDistance = 5f;
@@ -37,6 +38,15 @@ public class Player : MonoBehaviour
 
     private Vector3 dashStartPos;
     private bool isDashing;
+
+    //Parry
+    public float parryCooldown = 1f;
+    public float meleeRange = 2f;
+    public LayerMask meleeLayer;
+    private bool canParry = true;
+
+    //Parry Disparo
+    //public LayerMask bulletLayer;
 
     void Awake()
     {
@@ -49,12 +59,18 @@ public class Player : MonoBehaviour
     {
         _horizontal = Input.GetAxisRaw("Horizontal");
         //_vertical = Input.GetAxisRaw("Vertical");
+
+        //Movimiento
         Movimiento();
+
         
+        
+        //Salto
         Salto();
-        //_anim.SetBool("isJumping",!_isGrounded);
         _anim.SetBool("isJumping",!_isGrounded);
 
+
+        //Ataque
         if (Input.GetButtonDown("Fire1"))
         {
             PerformAttack();
@@ -63,24 +79,34 @@ public class Player : MonoBehaviour
             _anim.SetBool("isAttacking",false);
         }
 
+        //Ataque hacia abajo
         if (Input.GetButtonDown("Fire1") && Input.GetKeyDown(KeyCode.S))
         {
             PerformDownwardAttack();
         }
 
+        //Dash
         if (Input.GetKeyDown(KeyCode.Z))
         {
             PerformDash();
             
         }
-
         if (isDashing)
         {
             DashMovement();
             _anim.SetBool("isDash",true);
             
-        }else{
+        }else
+        {
             _anim.SetBool("isDash",false);
+        }
+        
+        //Parry
+        if (Input.GetButtonDown("Fire2") && canParry)
+        {
+            Parry();
+        }else{
+            _anim.SetBool("isParry", false);
         }
     
     }
@@ -123,20 +149,26 @@ public class Player : MonoBehaviour
 
    void PerformAttack()
     {
-        //animator.SetTrigger("Attack");
 
-       Collider[] enemies = Physics.OverlapSphere(transform.position, attackRadius, enemyLayer);
+       Collider[] enemies = Physics.OverlapSphere(_attackForward.position, attackRadius, enemyLayer);
 
         foreach (Collider enemy in enemies)
         {
             enemy.GetComponent<Enemy>().TakeDamage(damage);
         }
         Debug.Log("Atacado");
+
+        /*Collider[] projectiles = Physics.OverlapSphere(transform.position, attackRadius, bulletLayer);
+        foreach (Collider projectile in projectiles)
+        {
+            projectile = GetComponent<Projectile>();
+            ReturnShoot();
+        }*/
     }
 
     void PerformDownwardAttack()
     {
-        //animator.SetTrigger("DownwardAttack"); // Activate the downward attack animation
+        //animator.SetTrigger("DownwardAttack"); // Activa la animacion de el ataque hacia abajo
         Collider[] enemies = Physics.OverlapSphere(transform.position, attackRadius, enemyLayer);
 
         foreach (Collider enemy in enemies)
@@ -151,35 +183,76 @@ public class Player : MonoBehaviour
     {
         if (!isDashing)
         {
-            // Save the starting position of the dash
+            // Guarda la posicion inicial del dash
             dashStartPos = transform.position;
 
-            // Set the flag to start dashing
+            // Inicia la flag para poder dashear
             isDashing = true;
         }
     }
 
+    /*void ReturnShoot()
+    {
+        projectile._enemyThatShoot.position;
+    }*/
+
     void DashMovement()
     {
-        // Calculate the final position of the dash
+        // Calcular la posicion final del dash
         Vector3 finalPosition = dashStartPos + transform.forward * dashDistance;
 
-        // Move towards the final position using CharacterController
+        // Movimiento hacia la posicion final del dash
         _controller.Move(transform.forward * dashSpeed * Time.deltaTime);
 
-        // Check if the dash is completed
+        // Comprueba si se ha realizado el dash
         if (Vector3.Distance(transform.position, dashStartPos) >= dashDistance)
         {
-            // Reset the flag and stop dashing
+            // Resetea el flag y para el dash
             isDashing = false;
         }
 
     }
 
+    IEnumerator ParryCooldown()
+    {
+        canParry = false;
+        yield return new WaitForSeconds(parryCooldown);
+        canParry = true;
+    }
+
+    void Parry()
+    {
+        _anim.SetBool("isParry", true);
+        Debug.Log("Parrendo");
+        StartCoroutine(ParryCooldown());
+
+        // Verificar si hay un objetivo cercano para el parry melee
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, meleeRange, meleeLayer);
+        if (hitColliders.Length > 0)
+        {
+            PerformMeleeParry(hitColliders[0]);
+        }
+    }
+
+    void PerformMeleeParry(Collider target)
+    {
+        Enemy enemy = target.GetComponent<Enemy>();
+        if (enemy != null)
+        {  
+            PerformAttack();
+            _anim.SetTrigger("Parry_Attack");
+        }else
+        {
+            _anim.SetBool("isParry", false);
+        }
+
+        Debug.Log("Melee Parry and Special Attack!");
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRadius);
+        Gizmos.DrawWireSphere(_attackForward.position, attackRadius);
     }
     
 }
