@@ -25,7 +25,10 @@ public class Player : MonoBehaviour
     public bool _isGrounded;
 
     //Ataque
-    public float damage = 10f;
+    //Dano ataque normal
+    public float _damage = 1f;
+    //Dano ataque parry
+    public float _damageStrong = 3f;
     public LayerMask enemyLayer;
     public float attackRadius = 1.5f;
     [SerializeField] private float downwardAttackForce = 15;
@@ -35,7 +38,6 @@ public class Player : MonoBehaviour
     public float dashDistance = 5f;
     public float dashDuration = 0.5f;
     public float dashSpeed = 10f;
-
     private Vector3 dashStartPos;
     private bool isDashing;
 
@@ -73,7 +75,7 @@ public class Player : MonoBehaviour
         //Ataque
         if (Input.GetButtonDown("Fire1"))
         {
-            PerformAttack();
+            PerformAttack(_damage);
             _anim.SetBool("isAttacking",true);
         }else{
             _anim.SetBool("isAttacking",false);
@@ -147,14 +149,14 @@ public class Player : MonoBehaviour
         _controller.Move(_jugadorGravedad * Time.deltaTime);
     }
 
-   void PerformAttack()
+   void PerformAttack(float _inputDamage)
     {
 
        Collider[] enemies = Physics.OverlapSphere(_attackForward.position, attackRadius, enemyLayer);
 
         foreach (Collider enemy in enemies)
         {
-            enemy.GetComponent<Enemy>().TakeDamage(damage);
+            enemy.GetComponent<Enemy>().TakeDamage(_inputDamage);
         }
         Debug.Log("Atacado");
 
@@ -173,7 +175,7 @@ public class Player : MonoBehaviour
 
         foreach (Collider enemy in enemies)
         {
-            enemy.GetComponent<Enemy>().TakeDamage(damage);
+            enemy.GetComponent<Enemy>().TakeDamage(_damage);
         }
         _controller.Move(Vector3.up * downwardAttackForce * Time.deltaTime);
         Debug.Log("Atacado Abajo");
@@ -236,10 +238,11 @@ public class Player : MonoBehaviour
 
     void PerformMeleeParry(Collider target)
     {
+        //Anadir boleana al enemigo que indique si el enemigo esta atacando, si el enemigo se encuentra en el estado de ataque que se ejecute el parry
         Enemy enemy = target.GetComponent<Enemy>();
-        if (enemy != null)
+        if (enemy != null) //enemy.isAttacking == true
         {  
-            PerformAttack();
+            PerformAttack(_damageStrong);
             _anim.SetTrigger("Parry_Attack");
         }else
         {
@@ -253,6 +256,9 @@ public class Player : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(_attackForward.position, attackRadius);
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(_posicionSensor.position, _radioSensor);
     }
     
 }
