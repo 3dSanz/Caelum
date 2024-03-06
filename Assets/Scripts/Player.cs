@@ -156,7 +156,7 @@ public class Player : MonoBehaviour
 
         foreach (Collider enemy in enemies)
         {
-            enemy.GetComponent<Enemy>().TakeDamage(_inputDamage);
+            //enemy.GetComponent<Enemy>().TakeDamage(_inputDamage);
         }
         Debug.Log("Atacado");
 
@@ -175,7 +175,7 @@ public class Player : MonoBehaviour
 
         foreach (Collider enemy in enemies)
         {
-            enemy.GetComponent<Enemy>().TakeDamage(_damage);
+            //enemy.GetComponent<Enemy>().TakeDamage(_damage);
         }
         _controller.Move(Vector3.up * downwardAttackForce * Time.deltaTime);
         Debug.Log("Atacado Abajo");
